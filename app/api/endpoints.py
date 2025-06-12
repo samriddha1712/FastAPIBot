@@ -1,10 +1,16 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 import re
 from typing import Optional
 from app.database.mongodb import Database
 
-app = FastAPI()
+# Create router without prefix - prefix is added in main.py
+router = APIRouter()
+
+# Add a health check endpoint for the API
+@router.get("/api/health", tags=["Health"])
+async def health_check():
+    return {"status": "ok", "message": "API is healthy"}
 
 class ComplaintCreate(BaseModel):
     name: str
@@ -32,7 +38,7 @@ def get_db():
 def validate_phone_number(phone_number: str) -> bool:
     return bool(re.match(r'^\d{10,15}$', phone_number))
 
-@app.post("/complaints", response_model=ComplaintResponse, tags=["Complaints"])
+@router.post("/api/complaints", response_model=ComplaintResponse, tags=["Complaints"])
 async def create_complaint(complaint: ComplaintCreate, db: Database = Depends(get_db)):
     if not validate_phone_number(complaint.phone_number):
         raise HTTPException(status_code=400, detail="Invalid phone number format")
@@ -45,7 +51,7 @@ async def create_complaint(complaint: ComplaintCreate, db: Database = Depends(ge
     )
     return {"complaint_id": complaint_id}
 
-@app.get("/complaints/{complaint_id}", tags=["Complaints"])
+@router.get("/api/complaints/{complaint_id}", tags=["Complaints"])
 async def get_complaint(complaint_id: str, db: Database = Depends(get_db)):
     complaint = db.get_complaint(complaint_id)
     if not complaint:
