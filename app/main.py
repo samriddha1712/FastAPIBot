@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import app as api_app
+from app.api.endpoints import router
 
 app = FastAPI(title="RAG Chatbot with Complaint System")
 
@@ -13,5 +13,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount API
-app.mount("/app", api_app)
+# Include the router at the root level since we've already specified the /api prefix in the route paths
+app.include_router(router)
+
+# Add a root endpoint for health check
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "API is running"}
