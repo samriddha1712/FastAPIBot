@@ -14,4 +14,4 @@ app.add_middleware(
 )
 
 # Mount API
-app.mount("/", api_app)
+app.mount("/app", api_app)
